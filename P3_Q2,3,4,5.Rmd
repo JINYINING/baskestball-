@@ -1,0 +1,177 @@
+---
+title: "Part3_Question2,3,4"
+Author: "Team 02"
+output: html_document
+---
+# Part three
+```{r}
+install.packages("MASS")
+install.packages("bootStepAIC")
+```
+
+#Load table values as a data frame
+```{r}
+d.f = read.csv("/Users/en/Desktop/new_player_2.csv",header=TRUE)
+```
+# Find log of salary
+```{r}
+d.f$logSal =  log(d.f$salary)
+```
+# Density plots
+```{r}
+plot(density(log(d.f$salary)))
+plot(density(d.f$logSal, kernel = "gaussian", adjust=1, bw="SJ"))
+```
+# Q-Q Plot
+```{r}
+qqnorm(d.f$salary, main = 'Normal Q-Q Plot (Salary)')
+qqnorm(d.f$logSal, main = 'Normal Q-Q Plot (Logsal)')
+```
+# Create dummy variables for positions of the players
+```{r}
+is.factor(d.f$Pos)
+d.f$Pos[1:10]
+```
+#Qestion2_a Linear regression
+```{r}
+l_regression =lm(log(d.f$salary) ~ d.f$G+d.f$FG+d.f$PTS+d.f$FT+d.f$TRB+d.f$PF+d.f$TOV+d.f$BLK+d.f$experience+d.f$Age+d.f$THTEEPA+d.f$TWOPA+d.f$Pos_PF + d.f$Pos_PG+d.f$Pos_SF+d.f$Pos_SG,data = d.f)
+summary(l_regression)
+```
+```{r}
+l_2reggression = lm(logSal ~ d.f$experience+d.f$FG+d.f$MP+d.f$PTS+d.f$G+d.f$TWOP+d.f$THTEEP+d.f$FT+d.f$TRB+d.f$PF+d.f$TOV+d.f$Pos_PF + d.f$Pos_PG+d.f$Pos_SF+d.f$Pos_SG, data = d.f)
+summary(l_2reggression)
+```
+
+# Output AIC by using step function
+```{r}
+library(bootStepAIC)
+step <- stepAIC(l_2reggression)
+step$anova
+```
+#Qestion2_b  Why do you choose the model you specified? Do you have any “theory” or rely on your observations?
+First, without transformation, model cannot fit well casue the line will not be so perfect.After trying for several models( include x,x**0.3,x**0.8,ect.) we found that log will fit the model best,(with R^2 to be 0.5719).
+Second, dummy variables are necessary in this situation, cause variable position is very important in this situation, we change the position into dummy variables help to improve our model.
+
+#Qestion2_c How do you interpret the results, particularly your key variable of interest?
+
+log(salary) = 15 + 0.013* G-0.365* FG+0.232*PTS-0.188*FT+0.126*TRB-0.458*PF+0.146*TOV+0.062*BLK+ 0.213*experience-0.102*Age
+
+For every unit increase in the experience years of a player, the average salary increases by a magnitude of 0.213 units. Similarly, this relation can be extended to other parameters too. As a result, for every increase in G, PTS,TRB,TOV,BLK, the magnitude of the salary increases by 0.013, 0.232, 0.126, 0.146, 0.062 respectively. From the above plot, we observe that the regression model is deeply inclined towards the experience years of a player.
+
+# Qestion2_d  Which predictors are statistically significant?
+G,FT,TRB,THTEEPA,MP,Age ,experience(year)
+cause p value is lee than 0.05, so these variables above are statistically significant
+
+# Qestion2_e If you are the team coach, what do you tell players from your analysis? For instance, each field goal contributes to your salary $X amount, so everyone should shoot as often? How  does your analysis contribute to the team’s overall revenue model?
+increase your experience, 
+increase one year experience will contribute 0.213 million income per year
+# Qestion2_f Do you believe the results?
+From the results obtained in the regression model, we tend to believe that experience is the only major factor that plays a major role in deciding a players salary as it contributes main influence to the overall salary. 
+
+#Question3- Model Justification
+
+#Qestion3_a. Do you think your coefficients in regression are fair, overestimated or underestimated? (hint: check the conditional mean-zero error assumption from the residual plot and what is the implication of the residual average shown in the plot?)
+As we have illuarted above the line is not linear so it is concluded that heteroskedastic tendencies exist. 
+The conclusion is therefore that the assumption for constant variance is not satisfied.
+In order to certify that the data is heteroskedastic, a Breusch-Pagan test is performed. 
+The Breusch-Pagan test generated a P-value below 0.05. Since the hypothesis for homoskedasticity is rejected it can be suggested that the data of the model is heteroskedastic.
+
+#Qestion3_b. Do you worry about heteroskedasticity? How can you detect and fix it if any?
+To handle the issue of heteroskedasticity a log transformation was performed. 
+By processing this method it was suggested to transform the response variable to log(salary)
+
+#Qestion3_c. Do you worry about multicollinearity among your predictors? How can you quickly tell direction/strength of correlations among your variables?
+stepwise AIC was performed to estimate if a single covariate can be excluded from the model.
+For each covariate with a high p-value, a ∆AIC was calculated. where the Reduced model consisted of all variables except one and the Full model of all variables. 
+If the ∆AIC was negative the covariate was excluded from the final model. This was repeated stepwise until no ∆AIC was negative. 
+
+#Qestion3_d. If there is strong evidence for multicollinearity, which method do you choose to alleviate it and why?
+If I want to fit a multicollinearity, I would subtract the mean of the predictor variable from the value of the predictor variable.
+Remove highly correlated predictors from the model. Because they provide redundant information, deleting them usually does not significantly reduce R^2. I will consider using stepwise regression, best subset regression, or data set expertise to remove these variables.
+Use partial least squares or principal component analysis. These methods can reduce the number of predictors to a smaller set of uncorrelated components.
+For example, a toy manufacturer wants to predict customer satisfaction. They include "strength" and "no breakage" as predictors in the regression model. The investigator can determine that these two variables have a strong negative correlation and a VIF greater than 5. Investigators can also use partial least squares or principal component analysis to use these related variables to create "durability" parts.
+
+#Question4-Panel data analysis
+#Question4_a. Which time-varying variables matter to explain player’s salary?
+Time Variant Variables included: ORB, DRB, BLK, TOV, PF,, AST, STL, PTS, experience,G, MP, THTEEP, TWOP
+
+#Question4_b. Which are time-invariant predictors in your data set? Do you worry about any fixed effect αi that might correlated with your predictors? If yes, provide examples of such fixed effects.
+Time Invariant Variables included: Height, Weight, Playerid. 
+
+#Question4_c. Which model of panel analysis do you choose, “fixed-effect” or random effect models and why?
+# Fixed data analysis
+```{r}
+library(plm)
+```
+# Fixed Effect Model
+```{r}
+fixmod = lm(d.f$salary ~ d.f$wt+d.f$G+d.f$MP+d.f$THTEEP+d.f$TWOP+d.f$ORB+d.f$DRB+d.f$AST+d.f$STL+
+              d.f$BLK+d.f$TOV+d.f$PF+d.f$PTS+d.f$experience)
+summary(fixmod)
+```
+# Time Fixed Effect Model
+```{r}
+library(plm)
+d.f.season = read.csv("/Users/en/Desktop/new_player_season.csv",header=TRUE)
+season_dum = as.factor(d.f.season$season_year)
+Time_f_m = lm(d.f.season$salary ~ d.f.season$wt+d.f.season$G+d.f.season$MP+d.f.season$THTEEP+d.f.season$TWOP+d.f.season$ORB+d.f.season$DRB+d.f.season$AST+d.f.season$STL+d.f.season$BLK+d.f.season$TOV
+           +d.f.season$PF+d.f.season$PTS+d.f.season$experience+season_dum)
+summary(Time_f_m)
+```
+# Fixed vs Random Effects
+```{r}
+library(plm)
+# Dependent Variable - Salary
+Y <- cbind(d.f$salary)
+
+# Independent Variables
+X <- cbind(d.f$wt,d.f$G,d.f$MP,d.f$THTEEP,d.f$TWOP,d.f$ORB,d.f$DRB,d.f$AST,d.f$STL,d.f$BLK,d.f$TOV,d.f$PF,d.f$PTS,d.f$experience)
+```
+# use index (playerid and time index,ie.season)
+```{r}
+d.f = read.csv("/Users/en/Desktop/new_player.csv",header=TRUE)
+paneldata <- pdata.frame(d.f, index=c("playerid","season"))
+```
+# summary of Y and X
+```{r}
+summary(Y)
+summary(X)
+```
+# Fixed effects 
+```{r}
+library(plm)
+fixed <- plm(Y ~ X, data=paneldata, model= "within")
+summary(fixed)
+```
+# Random effects estimator
+```{r}
+random <- plm(Y ~ X, data=paneldata, model= "random")
+summary(random)
+```
+# Plots :
+```{r}
+residuals = resid(fixedestimator)
+plot(residuals)
+lines(residuals)
+```
+# Prediction intervals - Lower bound/Upper bound
+```{r}
+confint(regmodel, level=0.95)
+predict(regmodel,interval="prediction")
+```
+
+#Question5-Interpretation
+#Qestion5_a. Do you think your result could be interpreted in a causal relationship? Why or why not?
+
+
+#Qestion5_b. Winning a game is a team effort, but solely that of a single player. If the objective is to win, how can your prediction include cooperation amongst members?
+To measure the cooperation between players, we can add some variables like balls transfering between players per game and stop counterparty attacks per game, taking these data into consideration will help improve the prediction performance.
+
+#Qestion5_c. New athletes are drafted using a system where teams are randomly set an order (eg. 1st for LA Lakers, 2nd for Chicago Bulls, and so on), and get to place a contract with the player in that order. Players then can choose to accept or reject the offer. Which variables do you think matter for a successful draft for the player? Describe what kind of data you need to answer such question and how.
+When a new athlete is drafted by NBA teams, the above used variables are hard to get. The crucial question is that candidates come from different backgrounds and attended different games, their performance data are not as reliable as later when they are in the league.
+ However, we deem that 4 variables should be used when we decide whether to draft a new athlete.
+ 1 Total games palyed: count how many normal games the new athlete played.
+ 2 Height: The height of the athlete
+ 3 Speed: The 100 meter running speed of the athlete
+ 4 Weight: Theweight of the athlete
+To pick the best new athlete, we can cluster the historical successful NBA players among all players based on the 4 variables above, and pick the most alike new athlete.
